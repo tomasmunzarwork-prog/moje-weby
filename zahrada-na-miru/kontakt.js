@@ -1,5 +1,5 @@
-// Doplňte skutečné kontakty zahradníka. Telefon zapisujte i s předvolbou.
-const kontakt = { email: "", telefon: "" };
+// E-mail doplňte po potvrzení od provozovatele.
+const kontakt = { email: "", telefon: "+420 732 612 365" };
 
 const form = document.querySelector("#formular");
 const preview = document.querySelector("#navrh-poptavky");
@@ -7,6 +7,8 @@ const message = document.querySelector("#text-poptavky");
 const feedback = document.querySelector("#zprava");
 const mailButton = document.querySelector("#odeslat");
 const contactList = document.querySelector("#kontakt");
+
+contactList.replaceChildren();
 
 for (const [value, href] of [
   [kontakt.telefon, `tel:${kontakt.telefon.replace(/\s/g, "")}`],
@@ -21,7 +23,7 @@ for (const [value, href] of [
   contactList.append(item);
 }
 contactList.hidden = !contactList.children.length;
-document.querySelector("#ukazka").hidden = !contactList.hidden;
+document.querySelector("#ukazka").hidden = Boolean(kontakt.email);
 
 form.hidden = false;
 

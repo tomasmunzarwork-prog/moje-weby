@@ -239,3 +239,7 @@ textarea { resize: vertical; }
   html { scroll-behavior: auto; }
   .button { transition: none; }
 }
+
+.hero-area { margin-top: .9rem; color: var(--muted); font-size: .95rem; }
+.services-extra { margin-top: 1.25rem; color: var(--muted); }
+.hero-button { font-size: clamp(1.05rem, 1.5vw, 1.45rem); }
