@@ -1,5 +1,5 @@
-// E-mail doplňte po potvrzení od provozovatele.
-const kontakt = { email: "", telefon: "+420 732 612 365" };
+// Kontaktní údaje z letáčku provozovatele.
+const kontakt = { email: "jirka.kusy@centrum.cz", telefon: "+420 732 612 365" };
 
 const form = document.querySelector("#formular");
 const preview = document.querySelector("#navrh-poptavky");
