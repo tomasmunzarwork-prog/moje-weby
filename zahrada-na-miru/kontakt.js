@@ -1,45 +1,72 @@
-// Kontaktní údaje z letáčku provozovatele.
-const kontakt = { email: "jirka.kusy@centrum.cz", telefon: "+420 732 612 365" };
+const photos = document.querySelectorAll("[data-portfolio-photo]");
+if (photos.length && "IntersectionObserver" in window &&
+    window.matchMedia("(prefers-reduced-motion: no-preference)").matches) {
+  const observer = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+
+      entry.target.classList.add("portfolio-photo-visible");
+      observer.unobserve(entry.target);
+    }
+  }, { threshold: 0.12 });
+
+  photos.forEach((photo) => observer.observe(photo));
+}
 
 const form = document.querySelector("#formular");
 const preview = document.querySelector("#navrh-poptavky");
 const message = document.querySelector("#text-poptavky");
 const feedback = document.querySelector("#zprava");
 const mailButton = document.querySelector("#odeslat");
-const contactList = document.querySelector("#kontakt");
+const emailHref = document.querySelector("#kontakt-email").getAttribute("href");
+const fields = [
+  { control: form.elements.sluzba, prompt: "Vyberte službu." },
+  { control: form.elements.obec, prompt: "Zadejte obec, kde se má práce provést." },
+  { control: form.elements.popis, prompt: "Stručně popište, jakou práci potřebujete." },
+];
 
-contactList.replaceChildren();
-
-for (const [value, href] of [
-  [kontakt.telefon, `tel:${kontakt.telefon.replace(/\s/g, "")}`],
-  [kontakt.email, `mailto:${kontakt.email}`],
-]) {
-  if (!value) continue;
-  const item = document.createElement("li");
-  const link = document.createElement("a");
-  link.textContent = value;
-  link.href = href;
-  item.append(link);
-  contactList.append(item);
+function showFieldError(control, error) {
+  document.getElementById(control.getAttribute("aria-describedby")).textContent = error;
+  if (error) {
+    control.setAttribute("aria-invalid", "true");
+  } else {
+    control.removeAttribute("aria-invalid");
+  }
 }
-contactList.hidden = !contactList.children.length;
-document.querySelector("#ukazka").hidden = Boolean(kontakt.email);
 
+function warnAboutDraft(event) {
+  event.preventDefault();
+  event.returnValue = true;
+}
+
+form.noValidate = true;
 form.hidden = false;
 
-for (const name of ["obec", "popis"]) {
-  const field = form.elements.namedItem(name);
-  field.addEventListener("input", () => {
-    field.setCustomValidity(field.value && !field.value.trim() ? "Vyplňte prosím toto pole." : "");
-  });
-}
+form.addEventListener("input", (event) => {
+  showFieldError(event.target, "");
+  preview.hidden = true;
+  if (fields.some(({ control }) => control.value.trim())) {
+    window.addEventListener("beforeunload", warnAboutDraft);
+  } else {
+    window.removeEventListener("beforeunload", warnAboutDraft);
+  }
+});
 
 form.addEventListener("submit", (event) => {
   event.preventDefault();
-  const fields = new FormData(form);
-  const service = fields.get("sluzba");
-  const place = fields.get("obec").trim();
-  const details = fields.get("popis").trim();
+
+  let firstInvalid;
+  for (const { control, prompt } of fields) {
+    const error = control.value.trim() ? "" : prompt;
+    showFieldError(control, error);
+    if (error) firstInvalid ||= control;
+  }
+  if (firstInvalid) {
+    firstInvalid.focus();
+    return;
+  }
+
+  const [service, place, details] = fields.map(({ control }) => control.value.trim());
   const subject = `Poptávka zahradnických prací – ${service}`;
 
   message.value = [
@@ -55,14 +82,12 @@ form.addEventListener("submit", (event) => {
     "Děkuji a přeji hezký den.",
   ].join("\n");
 
-  if (kontakt.email) {
-    mailButton.href = `mailto:${kontakt.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message.value)}`;
-    mailButton.hidden = false;
-  }
-
-  feedback.textContent = "";
+  mailButton.href = `${emailHref}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message.value)}`;
   preview.hidden = false;
-  message.focus();
+  feedback.textContent = "Text poptávky je připravený.";
+  mailButton.focus();
+  window.removeEventListener("beforeunload", warnAboutDraft);
+  window.location.href = mailButton.href;
 });
 
 document.querySelector("#kopirovat").addEventListener("click", async () => {
